@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url]
 
 * Студент: [Sergey Vikhrov](https://up.htmlacademy.ru/javascript/11/user/70982).
-* Наставник: `Неизвестно`.
+* Наставник: [Keks].
 
 ---
 
