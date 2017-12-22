@@ -6,11 +6,19 @@ var pictureTemplate = document.querySelector('#picture-template').content.queryS
 // Место для вставки
 var pictures = document.querySelector('.pictures');
 
+// Отвечает за полноэкранный режим
+var galleryOverlay = document.querySelector('.gallery-overlay');
+var closePicture = galleryOverlay.querySelector('.gallery-overlay-close');
+
 // Хранит комментарии.
 var comments = ['Всё отлично!', 'В целом всё неплохо. Но не всё.', 'Когда вы делаете фотографию, хорошо бы убирать палец из кадра. В конце концов это просто непрофессионально.', 'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.', 'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.', 'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'];
 
 // Хранит общее количество фото
 var maxPicturesNumber = 25;
+
+// Коды клавиш
+var ESC_KEYCODE = 27;
+var ENTER_KEYCODE = 13;
 
 // Возвращает сучайное число в диапазоне [min, max) (для лайков)
 var getRandomValue = function (min, max) {
@@ -32,6 +40,16 @@ var getComment = function () {
   }
 };
 
+// Возвращает массив (случайной длины) всех комментариев
+var photoComments = function () {
+  var arr = [];
+  var arrLength = Math.ceil(Math.random() * 10);
+  while (arr.length < arrLength) {
+    arr.push(getComment());
+  }
+  return arr;
+};
+
 // Возвращает url как строку
 var createUrl = function (i) {
   var url = 'photos/' + parseInt(i + 1, 10) + '.jpg';
@@ -43,7 +61,7 @@ var pictureDescription = function (i) {
   return {
     url: createUrl(i),
     likes: getRandomValue(15, 200),
-    comments: getComment()
+    comments: photoComments()
   };
 };
 // var descriptionTemplate = pictureDescription();
@@ -59,32 +77,77 @@ var descriptions = function () {
 var arrayTemplate = descriptions();
 
 // Создает "клоны" шаблона DOM-узлов описаний фото
-var createPictureDescriptions = function () {
+var createPictureDescriptions = function (picture) {
   var pictureElement = pictureTemplate.cloneNode(true);
-  pictureElement.querySelector('img').src = arrayTemplate[i].url;
-  pictureElement.querySelector('.picture-likes').textContent = arrayTemplate[i].likes;
-  pictureElement.querySelector('.picture-comments').textContent = arrayTemplate[i].comments;
+  pictureElement.querySelector('img').src = picture.url;
+  pictureElement.querySelector('.picture-likes').textContent = picture.likes;
+  pictureElement.querySelector('.picture-comments').textContent = picture.comments.length;
 
   return pictureElement;
 };
 
 // Отрисовывает "клоны" в объекте #document-fragment
 var fragment = document.createDocumentFragment();
-for (var i = 0; i < 25; i++) {
+for (var i = 0; i < maxPicturesNumber; i++) {
   fragment.appendChild(createPictureDescriptions(arrayTemplate[i]));
 }
 pictures.appendChild(fragment);
 
-// Показывает overlay
-var galleryOverlay = document.querySelector('.gallery-overlay');
-galleryOverlay.classList.remove('hidden');
-
-// Отрисовывает всплывающее фото с количеством комментариев и лайков
-var createOverlayDescription = function () {
-  galleryOverlay.querySelector('.gallery-overlay-image').src = arrayTemplate[0].url;
-  galleryOverlay.querySelector('.likes-count').textContent = arrayTemplate[0].likes;
-  galleryOverlay.querySelector('.comments-count').textContent = arrayTemplate[0].comments.length;
+// Функции открытия/закрытия картинки
+var escapePress = function (event) {
+  if (event.keyCode === ESC_KEYCODE) {
+    closeGallery();
+  }
 };
-createOverlayDescription();
 
+var openGallery = function () {
+  galleryOverlay.classList.remove('hidden');
+  document.addEventListener('keydown', escapePress);
+};
 
+var closeGallery = function () {
+  galleryOverlay.classList.add('hidden');
+  document.removeEventListener('keydown', escapePress);
+};
+
+// Обработчики событий клика/нажатия клавиш
+pictures.addEventListener('click', function (event) {
+  event.preventDefault();
+  if (event.target.tagName === 'IMG') {
+    openGallery();
+    renderOverlayPicture(event);
+  }
+  // pic.addEventListener('click', renderOverlayPicture);
+});
+
+pictures.addEventListener('keydown', function (event) {
+  event.preventDefault();
+  if (event.keyCode === ENTER_KEYCODE) {
+    openGallery();
+  }
+});
+
+closePicture.addEventListener('keydown', function (event) {
+  event.preventDefault();
+  if (event.keyCode === ENTER_KEYCODE) {
+    closeGallery();
+  }
+});
+
+closePicture.addEventListener('click', function () {
+  event.preventDefault();
+  closeGallery();
+});
+
+// Отрисовывает полноэкранное фото с количеством комментариев и лайков
+var renderOverlayPicture = function (event) {
+  var clickedPhoto = event.target;
+  var clickedPhotoLikes = clickedPhoto.nextElementSibling.querySelector('.picture-likes').textContent;
+  var clickedPhotoComments = clickedPhoto.nextElementSibling.querySelector('.picture-comments').textContent;
+
+  galleryOverlay.querySelector('.gallery-overlay-image').src = clickedPhoto.src;
+  galleryOverlay.querySelector('.likes-count').textContent = clickedPhotoLikes;
+  galleryOverlay.querySelector('.comments-count').textContent = clickedPhotoComments;
+
+};
+renderOverlayPicture();
