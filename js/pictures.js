@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 // HTML-шаблон
 var pictureTemplate = document.querySelector('#picture-template').content.querySelector('.picture');
